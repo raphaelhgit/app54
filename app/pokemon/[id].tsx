@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { StatBarList } from "@/src/components/StatBar";
@@ -105,19 +106,21 @@ export default function PokemonDetail() {
             style={styles.image}
           />
         )}
-        <Text style={styles.name}>
-          #{pokemon.id} {pokemon.name}
-        </Text>
-        <Text style={styles.info}>Types : {pokemon.types?.join(", ")}</Text>
-        <Text style={styles.info}>
-          Talents : {pokemon.abilities?.join(", ")}
-        </Text>
-        <Text style={styles.info}>
-          Taille : {pokemon.height / 10} m · Poids : {pokemon.weight / 10} kg ·
-          XP : {pokemon.base_experience}
-        </Text>
-        <Text style={styles.sectionTitle}>Statistiques</Text>
-        <StatBarList stats={pokemon.stats} />
+        <Animated.View entering={FadeInDown.duration(350).delay(100)}>
+          <Text style={styles.name}>
+            #{pokemon.id} {pokemon.name}
+          </Text>
+          <Text style={styles.info}>Types : {pokemon.types?.join(", ")}</Text>
+          <Text style={styles.info}>
+            Talents : {pokemon.abilities?.join(", ")}
+          </Text>
+          <Text style={styles.info}>
+            Taille : {pokemon.height / 10} m · Poids : {pokemon.weight / 10} kg
+            · XP : {pokemon.base_experience}
+          </Text>
+          <Text style={styles.sectionTitle}>Statistiques</Text>
+          <StatBarList stats={pokemon.stats} />
+        </Animated.View>
       </ScrollView>
     </>
   );

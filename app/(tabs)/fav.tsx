@@ -1,27 +1,21 @@
 import Constants from "expo-constants";
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 
-import { FavoriteButton } from "@/src/components/FavoriteButton";
-import { StatBarList } from "@/src/components/StatBar";
+import { PokemonCard } from "@/src/components/PokemonCard";
 import { useFavorites } from "@/src/contexts/FavoritesContext";
 import { useTheme } from "@/src/hooks/useTheme";
 
 const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
 const API = `http://${host}:3000`;
-
-function parseJson<T>(value: T | string): T {
-  return typeof value === "string" ? JSON.parse(value) : value;
-}
 
 export default function Fav() {
   const router = useRouter();
@@ -29,6 +23,7 @@ export default function Fav() {
   const { favorites, isLoading: favoritesLoading } = useFavorites();
   const [pokemons, setPokemons] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const styles = useMemo(
     () =>
@@ -53,25 +48,6 @@ export default function Fav() {
           fontSize: 14,
           textAlign: "center",
         },
-        card: {
-          flexDirection: "row",
-          alignItems: "flex-start",
-          padding: 12,
-          backgroundColor: theme.card,
-          marginBottom: 12,
-          borderRadius: 8,
-        },
-        cardPressed: { opacity: 0.85 },
-        cardBody: { flex: 1, marginLeft: 8 },
-        cardHeader: {
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 4,
-        },
-        image: { width: 64, height: 64 },
-        name: { color: theme.text, fontSize: 20, flex: 1 },
-        info: { color: theme.textSecondary, fontSize: 12, marginBottom: 2 },
       }),
     [theme]
   );
@@ -104,7 +80,13 @@ export default function Fav() {
     }
   }, [favoritesLoading, loadFavorites]);
 
-  if (favoritesLoading || loading) {
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadFavorites();
+    setRefreshing(false);
+  };
+
+  if (favoritesLoading || (loading && !refreshing)) {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={theme.accent} />
@@ -129,39 +111,23 @@ export default function Fav() {
       contentContainerStyle={styles.list}
       data={pokemons}
       keyExtractor={(p) => String(p.id)}
-      renderItem={({ item: p }) => {
-        const sprites = parseJson(p.sprites);
-        const types = parseJson(p.types);
-        const abilities = parseJson(p.abilities);
-        const stats = parseJson(p.stats);
-
-        return (
-          <Pressable
-            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-            onPress={() => router.push(`/pokemon/${p.id}`)}
-          >
-            {sprites?.front_default && (
-              <Image
-                source={{ uri: sprites.front_default }}
-                style={styles.image}
-              />
-            )}
-            <View style={styles.cardBody}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.name}>
-                  #{p.id} {p.name}
-                </Text>
-                <FavoriteButton id={p.id} size={22} />
-              </View>
-              <Text style={styles.info}>Types : {types?.join(", ")}</Text>
-              <Text style={styles.info}>
-                Talents : {abilities?.join(", ")}
-              </Text>
-              <StatBarList stats={stats} />
-            </View>
-          </Pressable>
-        );
-      }}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={theme.accent}
+          colors={[theme.accent]}
+        />
+      }
+      renderItem={({ item: p, index }) => (
+        <PokemonCard
+          pokemon={p}
+          index={index}
+          theme={theme}
+          compact
+          onPress={() => router.push(`/pokemon/${p.id}`)}
+        />
+      )}
     />
   );
 }

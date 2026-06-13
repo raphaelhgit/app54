@@ -2,6 +2,7 @@ import { FavoritesProvider } from "@/src/contexts/FavoritesContext";
 import { ThemeProvider, useThemeContext } from "@/src/contexts/ThemeContext";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import "react-native-reanimated";
 
 function RootNavigator() {
   const { theme } = useThemeContext();
@@ -18,7 +19,10 @@ function RootNavigator() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="pokemon/[id]" options={{ title: "" }} />
+        <Stack.Screen
+          name="pokemon/[id]"
+          options={{ title: "", animation: "fade" }}
+        />
       </Stack>
     </>
   );

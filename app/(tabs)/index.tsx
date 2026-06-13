@@ -1,8 +1,7 @@
 import Constants from "expo-constants";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -12,17 +11,14 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
-import { FavoriteButton } from "@/src/components/FavoriteButton";
-import { StatBarList } from "@/src/components/StatBar";
+import { SkeletonCard } from "@/src/components/animations/SkeletonCard";
+import { PokemonCard } from "@/src/components/PokemonCard";
 import { useTheme } from "@/src/hooks/useTheme";
 
 const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
 const API = `http://${host}:3000`;
-
-function parseJson<T>(value: T | string): T {
-  return typeof value === "string" ? JSON.parse(value) : value;
-}
 
 function filterPokemons(pokemons: any[], query: string) {
   const term = query.trim().toLowerCase();
@@ -40,15 +36,18 @@ export default function Index() {
   const router = useRouter();
   const { theme } = useTheme();
   const [pokemons, setPokemons] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
 
-  const loadPokemons = async () => {
+  const loadPokemons = useCallback(async () => {
     const all: any[] = [];
     let offset = 0;
     while (true) {
       const r = await fetch(`${API}/api/pokemons?limit=100&offset=${offset}`);
+      if (!r.ok) throw new Error("Impossible de charger les Pokémon");
       const d = await r.json();
       const page = d.pokemons ?? [];
       all.push(...page);
@@ -56,11 +55,19 @@ export default function Index() {
       offset += 100;
     }
     setPokemons(all);
-  };
+  }, []);
 
   useEffect(() => {
-    loadPokemons();
-  }, []);
+    (async () => {
+      try {
+        await loadPokemons();
+      } catch {
+        setRefreshError("Erreur de chargement");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [loadPokemons]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query), 300);
@@ -74,12 +81,18 @@ export default function Index() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadPokemons();
-    setRefreshing(false);
+    setRefreshError(null);
+    try {
+      await loadPokemons();
+    } catch {
+      setRefreshError("Échec du rafraîchissement");
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const showEmpty =
-    debouncedQuery.trim().length > 0 && filteredPokemons.length === 0;
+    !loading && debouncedQuery.trim().length > 0 && filteredPokemons.length === 0;
 
   const styles = useMemo(
     () =>
@@ -110,6 +123,11 @@ export default function Index() {
           fontSize: 12,
           marginTop: 6,
         },
+        errorText: {
+          color: "#f34444",
+          fontSize: 12,
+          marginTop: 6,
+        },
         list: { flex: 1 },
         listContent: { paddingHorizontal: 16, paddingBottom: 16 },
         emptyText: {
@@ -118,32 +136,17 @@ export default function Index() {
           textAlign: "center",
           marginTop: 32,
         },
-        card: {
-          flexDirection: "row",
-          alignItems: "flex-start",
-          padding: 12,
-          backgroundColor: theme.card,
-          marginBottom: 12,
-          borderRadius: 8,
-        },
-        cardPressed: { opacity: 0.85 },
-        cardBody: { flex: 1, marginLeft: 8 },
-        cardHeader: {
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 4,
-        },
-        image: { width: 64, height: 64 },
-        name: { color: theme.text, fontSize: 20, flex: 1 },
-        info: { color: theme.textSecondary, fontSize: 12, marginBottom: 2 },
+        skeletonList: { paddingHorizontal: 16, paddingBottom: 16 },
       }),
     [theme]
   );
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchHeader}>
+      <Animated.View
+        entering={FadeInDown.duration(300)}
+        style={styles.searchHeader}
+      >
         <View style={styles.searchBar}>
           <Ionicons
             name="search"
@@ -168,7 +171,11 @@ export default function Index() {
               hitSlop={8}
               accessibilityLabel="Effacer la recherche"
             >
-              <Ionicons name="close-circle" size={20} color={theme.textSecondary} />
+              <Ionicons
+                name="close-circle"
+                size={20}
+                color={theme.textSecondary}
+              />
             </Pressable>
           )}
         </View>
@@ -178,68 +185,49 @@ export default function Index() {
             {filteredPokemons.length !== 1 ? "s" : ""}
           </Text>
         )}
-      </View>
+        {refreshError && (
+          <Text style={styles.errorText}>{refreshError}</Text>
+        )}
+      </Animated.View>
 
-      <FlatList
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={theme.accent}
-            colors={[theme.accent]}
-          />
-        }
-        data={filteredPokemons}
-        keyExtractor={(p) => String(p.id)}
-        keyboardShouldPersistTaps="handled"
-        ListEmptyComponent={
-          showEmpty ? (
-            <Text style={styles.emptyText}>Aucun Pokémon trouvé</Text>
-          ) : null
-        }
-        renderItem={({ item: p }) => {
-          const sprites = parseJson(p.sprites);
-          const types = parseJson(p.types);
-          const abilities = parseJson(p.abilities);
-          const stats = parseJson(p.stats);
-
-          return (
-            <Pressable
-              style={({ pressed }) => [
-                styles.card,
-                pressed && styles.cardPressed,
-              ]}
+      {loading ? (
+        <View style={styles.skeletonList}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} theme={theme} />
+          ))}
+        </View>
+      ) : (
+        <FlatList
+          style={styles.list}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={theme.accent}
+              colors={[theme.accent]}
+              title="Actualisation..."
+              titleColor={theme.textSecondary}
+            />
+          }
+          data={filteredPokemons}
+          keyExtractor={(p) => String(p.id)}
+          keyboardShouldPersistTaps="handled"
+          ListEmptyComponent={
+            showEmpty ? (
+              <Text style={styles.emptyText}>Aucun Pokémon trouvé</Text>
+            ) : null
+          }
+          renderItem={({ item: p, index }) => (
+            <PokemonCard
+              pokemon={p}
+              index={index}
+              theme={theme}
               onPress={() => router.push(`/pokemon/${p.id}`)}
-            >
-              {sprites?.front_default && (
-                <Image
-                  source={{ uri: sprites.front_default }}
-                  style={styles.image}
-                />
-              )}
-              <View style={styles.cardBody}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.name}>
-                    #{p.id} {p.name}
-                  </Text>
-                  <FavoriteButton id={p.id} size={22} />
-                </View>
-                <Text style={styles.info}>Types : {types?.join(", ")}</Text>
-                <Text style={styles.info}>
-                  Talents : {abilities?.join(", ")}
-                </Text>
-                <Text style={styles.info}>
-                  Taille : {p.height / 10} m · Poids : {p.weight / 10} kg · XP :{" "}
-                  {p.base_experience}
-                </Text>
-                <StatBarList stats={stats} />
-              </View>
-            </Pressable>
-          );
-        }}
-      />
+            />
+          )}
+        />
+      )}
     </View>
   );
 }

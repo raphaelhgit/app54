@@ -1,6 +1,12 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRef } from "react";
-import { Animated, Pressable } from "react-native";
+import { Pressable } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 import { useFavorites } from "@/src/contexts/FavoritesContext";
 import { useTheme } from "@/src/hooks/useTheme";
@@ -14,21 +20,25 @@ export function FavoriteButton({ id, size = 28 }: Props) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const { theme } = useTheme();
   const favorite = isFavorite(id);
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useSharedValue(1);
+  const rotation = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: scale.value },
+      { rotate: `${rotation.value}deg` },
+    ],
+  }));
 
   const handlePress = () => {
-    Animated.sequence([
-      Animated.timing(scale, {
-        toValue: 1.3,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scale, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    scale.value = withSequence(
+      withSpring(1.35, { damping: 8 }),
+      withSpring(1, { damping: 12 })
+    );
+    rotation.value = withSequence(
+      withTiming(20, { duration: 100 }),
+      withTiming(0, { duration: 150 })
+    );
     toggleFavorite(id);
   };
 
@@ -40,7 +50,7 @@ export function FavoriteButton({ id, size = 28 }: Props) {
         favorite ? "Retirer des favoris" : "Ajouter aux favoris"
       }
     >
-      <Animated.View style={{ transform: [{ scale }] }}>
+      <Animated.View style={animatedStyle}>
         <Ionicons
           name={favorite ? "star" : "star-outline"}
           size={size}
