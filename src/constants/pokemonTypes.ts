@@ -1,0 +1,43 @@
+export const POKEMON_TYPES = [
+  "normal",
+  "fire",
+  "water",
+  "grass",
+  "electric",
+  "ice",
+  "fighting",
+  "poison",
+  "ground",
+  "flying",
+  "psychic",
+  "bug",
+  "rock",
+  "ghost",
+  "dragon",
+  "dark",
+  "steel",
+  "fairy",
+] as const;
+
+export type PokemonTypeName = (typeof POKEMON_TYPES)[number];
+
+export const TYPE_LABELS: Record<PokemonTypeName, string> = {
+  normal: "Normal",
+  fire: "Feu",
+  water: "Eau",
+  grass: "Plante",
+  electric: "Électrik",
+  ice: "Glace",
+  fighting: "Combat",
+  poison: "Poison",
+  ground: "Sol",
+  flying: "Vol",
+  psychic: "Psy",
+  bug: "Insecte",
+  rock: "Roche",
+  ghost: "Spectre",
+  dragon: "Dragon",
+  dark: "Ténèbres",
+  steel: "Acier",
+  fairy: "Fée",
+};

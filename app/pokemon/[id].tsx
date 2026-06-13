@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
+import { EvolutionChain } from "@/src/components/evolution/EvolutionChain";
 import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { StatBarList } from "@/src/components/StatBar";
 import { useTheme } from "@/src/hooks/useTheme";
@@ -118,6 +119,11 @@ export default function PokemonDetail() {
             Taille : {pokemon.height / 10} m · Poids : {pokemon.weight / 10} kg
             · XP : {pokemon.base_experience}
           </Text>
+          <EvolutionChain
+            pokemonId={pokemonId}
+            apiBase={API}
+            theme={theme}
+          />
           <Text style={styles.sectionTitle}>Statistiques</Text>
           <StatBarList stats={pokemon.stats} />
         </Animated.View>

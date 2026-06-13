@@ -15,22 +15,12 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { SkeletonCard } from "@/src/components/animations/SkeletonCard";
 import { PokemonCard } from "@/src/components/PokemonCard";
+import { TypeFilterBar } from "@/src/components/TypeFilterBar";
 import { useTheme } from "@/src/hooks/useTheme";
+import { filterPokemons } from "@/src/utils/filterUtils";
 
 const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
 const API = `http://${host}:3000`;
-
-function filterPokemons(pokemons: any[], query: string) {
-  const term = query.trim().toLowerCase();
-  if (!term) return pokemons;
-
-  return pokemons.filter((p) => {
-    const nameMatch = p.name?.toLowerCase().includes(term);
-    const idMatch = String(p.id).includes(term);
-    const paddedIdMatch = String(p.id).padStart(3, "0").includes(term);
-    return nameMatch || idMatch || paddedIdMatch;
-  });
-}
 
 export default function Index() {
   const router = useRouter();
@@ -41,6 +31,7 @@ export default function Index() {
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
 
   const loadPokemons = useCallback(async () => {
     const all: any[] = [];
@@ -75,9 +66,18 @@ export default function Index() {
   }, [query]);
 
   const filteredPokemons = useMemo(
-    () => filterPokemons(pokemons, debouncedQuery),
-    [pokemons, debouncedQuery]
+    () => filterPokemons(pokemons, debouncedQuery, selectedTypes),
+    [pokemons, debouncedQuery, selectedTypes]
   );
+
+  const hasActiveFilter =
+    debouncedQuery.trim().length > 0 || selectedTypes.length > 0;
+
+  const toggleType = (type: string) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -92,7 +92,7 @@ export default function Index() {
   };
 
   const showEmpty =
-    !loading && debouncedQuery.trim().length > 0 && filteredPokemons.length === 0;
+    !loading && hasActiveFilter && filteredPokemons.length === 0;
 
   const styles = useMemo(
     () =>
@@ -179,7 +179,12 @@ export default function Index() {
             </Pressable>
           )}
         </View>
-        {debouncedQuery.trim().length > 0 && (
+        <TypeFilterBar
+          selectedTypes={selectedTypes}
+          onToggleType={toggleType}
+          onClearAll={() => setSelectedTypes([])}
+        />
+        {hasActiveFilter && (
           <Text style={styles.resultCount}>
             {filteredPokemons.length} Pokémon trouvé
             {filteredPokemons.length !== 1 ? "s" : ""}
