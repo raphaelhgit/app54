@@ -3,13 +3,14 @@ import { Image } from "expo-image";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
+import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { StatBarList } from "@/src/components/StatBar";
 
 const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
@@ -19,6 +20,7 @@ export default function PokemonDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [pokemon, setPokemon] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const pokemonId = Number(id);
 
   useEffect(() => {
     (async () => {
@@ -48,7 +50,16 @@ export default function PokemonDetail() {
 
   return (
     <>
-      <Stack.Screen options={{ title: `#${pokemon.id} ${pokemon.name}` }} />
+      <Stack.Screen
+        options={{
+          title: `#${pokemon.id} ${pokemon.name}`,
+          headerRight: () => (
+            <View style={{ marginRight: 12 }}>
+              <FavoriteButton id={pokemonId} />
+            </View>
+          ),
+        }}
+      />
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}

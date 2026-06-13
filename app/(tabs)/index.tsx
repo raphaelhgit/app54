@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 
+import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { StatBarList } from "@/src/components/StatBar";
 
 const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
@@ -157,9 +158,12 @@ export default function Index() {
                 />
               )}
               <View style={styles.cardBody}>
-                <Text style={styles.name}>
-                  #{p.id} {p.name}
-                </Text>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.name}>
+                    #{p.id} {p.name}
+                  </Text>
+                  <FavoriteButton id={p.id} size={22} />
+                </View>
                 <Text style={styles.info}>Types : {types?.join(", ")}</Text>
                 <Text style={styles.info}>
                   Talents : {abilities?.join(", ")}
@@ -223,7 +227,13 @@ const styles = StyleSheet.create({
   },
   cardPressed: { opacity: 0.85 },
   cardBody: { flex: 1, marginLeft: 8 },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
   image: { width: 64, height: 64 },
-  name: { color: "#efeee8", fontSize: 20, marginBottom: 4 },
+  name: { color: "#efeee8", fontSize: 20, flex: 1 },
   info: { color: "#cecbc5", fontSize: 12, marginBottom: 2 },
 });
