@@ -1,7 +1,7 @@
 import Constants from "expo-constants";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -14,6 +14,7 @@ import {
 import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { StatBarList } from "@/src/components/StatBar";
 import { useFavorites } from "@/src/contexts/FavoritesContext";
+import { useTheme } from "@/src/hooks/useTheme";
 
 const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
 const API = `http://${host}:3000`;
@@ -24,9 +25,56 @@ function parseJson<T>(value: T | string): T {
 
 export default function Fav() {
   const router = useRouter();
+  const { theme } = useTheme();
   const { favorites, isLoading: favoritesLoading } = useFavorites();
   const [pokemons, setPokemons] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.background },
+        list: { padding: 16 },
+        center: {
+          flex: 1,
+          backgroundColor: theme.background,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 24,
+        },
+        emptyTitle: {
+          color: theme.text,
+          fontSize: 20,
+          fontWeight: "600",
+          marginBottom: 8,
+        },
+        emptyText: {
+          color: theme.textSecondary,
+          fontSize: 14,
+          textAlign: "center",
+        },
+        card: {
+          flexDirection: "row",
+          alignItems: "flex-start",
+          padding: 12,
+          backgroundColor: theme.card,
+          marginBottom: 12,
+          borderRadius: 8,
+        },
+        cardPressed: { opacity: 0.85 },
+        cardBody: { flex: 1, marginLeft: 8 },
+        cardHeader: {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 4,
+        },
+        image: { width: 64, height: 64 },
+        name: { color: theme.text, fontSize: 20, flex: 1 },
+        info: { color: theme.textSecondary, fontSize: 12, marginBottom: 2 },
+      }),
+    [theme]
+  );
 
   const loadFavorites = useCallback(async () => {
     if (favorites.length === 0) {
@@ -59,7 +107,7 @@ export default function Fav() {
   if (favoritesLoading || loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#ffd33d" />
+        <ActivityIndicator color={theme.accent} />
       </View>
     );
   }
@@ -117,45 +165,3 @@ export default function Fav() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#25292e" },
-  list: { padding: 16 },
-  center: {
-    flex: 1,
-    backgroundColor: "#25292e",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  emptyTitle: {
-    color: "#efeee8",
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  emptyText: {
-    color: "#cecbc5",
-    fontSize: 14,
-    textAlign: "center",
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    padding: 12,
-    backgroundColor: "#4e5156",
-    marginBottom: 12,
-    borderRadius: 8,
-  },
-  cardPressed: { opacity: 0.85 },
-  cardBody: { flex: 1, marginLeft: 8 },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  image: { width: 64, height: 64 },
-  name: { color: "#efeee8", fontSize: 20, flex: 1 },
-  info: { color: "#cecbc5", fontSize: 12, marginBottom: 2 },
-});

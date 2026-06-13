@@ -15,6 +15,7 @@ import {
 
 import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { StatBarList } from "@/src/components/StatBar";
+import { useTheme } from "@/src/hooks/useTheme";
 
 const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
 const API = `http://${host}:3000`;
@@ -37,6 +38,7 @@ function filterPokemons(pokemons: any[], query: string) {
 
 export default function Index() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [pokemons, setPokemons] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState("");
@@ -79,6 +81,66 @@ export default function Index() {
   const showEmpty =
     debouncedQuery.trim().length > 0 && filteredPokemons.length === 0;
 
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.background },
+        searchHeader: {
+          backgroundColor: theme.background,
+          paddingHorizontal: 16,
+          paddingTop: 12,
+          paddingBottom: 8,
+        },
+        searchBar: {
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: theme.surface,
+          paddingHorizontal: 12,
+          borderRadius: 8,
+        },
+        searchIcon: { marginRight: 8 },
+        input: {
+          flex: 1,
+          color: theme.text,
+          fontSize: 16,
+          paddingVertical: 12,
+        },
+        resultCount: {
+          color: theme.textSecondary,
+          fontSize: 12,
+          marginTop: 6,
+        },
+        list: { flex: 1 },
+        listContent: { paddingHorizontal: 16, paddingBottom: 16 },
+        emptyText: {
+          color: theme.textSecondary,
+          fontSize: 16,
+          textAlign: "center",
+          marginTop: 32,
+        },
+        card: {
+          flexDirection: "row",
+          alignItems: "flex-start",
+          padding: 12,
+          backgroundColor: theme.card,
+          marginBottom: 12,
+          borderRadius: 8,
+        },
+        cardPressed: { opacity: 0.85 },
+        cardBody: { flex: 1, marginLeft: 8 },
+        cardHeader: {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 4,
+        },
+        image: { width: 64, height: 64 },
+        name: { color: theme.text, fontSize: 20, flex: 1 },
+        info: { color: theme.textSecondary, fontSize: 12, marginBottom: 2 },
+      }),
+    [theme]
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.searchHeader}>
@@ -86,13 +148,13 @@ export default function Index() {
           <Ionicons
             name="search"
             size={20}
-            color="#cecbc5"
+            color={theme.textSecondary}
             style={styles.searchIcon}
           />
           <TextInput
             style={styles.input}
             placeholder="Rechercher par nom ou numéro..."
-            placeholderTextColor="#8a8780"
+            placeholderTextColor={theme.textMuted}
             value={query}
             onChangeText={setQuery}
             autoCapitalize="none"
@@ -106,7 +168,7 @@ export default function Index() {
               hitSlop={8}
               accessibilityLabel="Effacer la recherche"
             >
-              <Ionicons name="close-circle" size={20} color="#cecbc5" />
+              <Ionicons name="close-circle" size={20} color={theme.textSecondary} />
             </Pressable>
           )}
         </View>
@@ -125,8 +187,8 @@ export default function Index() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#ffd33d"
-            colors={["#ffd33d"]}
+            tintColor={theme.accent}
+            colors={[theme.accent]}
           />
         }
         data={filteredPokemons}
@@ -181,59 +243,3 @@ export default function Index() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#25292e" },
-  searchHeader: {
-    backgroundColor: "#25292e",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#4e5156",
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  searchIcon: { marginRight: 8 },
-  input: {
-    flex: 1,
-    color: "#efeee8",
-    fontSize: 16,
-    paddingVertical: 12,
-  },
-  resultCount: {
-    color: "#cecbc5",
-    fontSize: 12,
-    marginTop: 6,
-  },
-  list: { flex: 1 },
-  listContent: { paddingHorizontal: 16, paddingBottom: 16 },
-  emptyText: {
-    color: "#cecbc5",
-    fontSize: 16,
-    textAlign: "center",
-    marginTop: 32,
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    padding: 12,
-    backgroundColor: "#4e5156",
-    marginBottom: 12,
-    borderRadius: 8,
-  },
-  cardPressed: { opacity: 0.85 },
-  cardBody: { flex: 1, marginLeft: 8 },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  image: { width: 64, height: 64 },
-  name: { color: "#efeee8", fontSize: 20, flex: 1 },
-  info: { color: "#cecbc5", fontSize: 12, marginBottom: 2 },
-});

@@ -1,4 +1,7 @@
+import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
+
+import { useTheme } from "@/src/hooks/useTheme";
 
 const MAX_BAR = 255;
 
@@ -35,7 +38,7 @@ export function StatBarList({ stats }: { stats: Stat[] }) {
   if (!stats?.length) return null;
 
   return (
-    <View style={styles.list}>
+    <View style={{ gap: 6, width: "100%", marginTop: 8 }}>
       {stats.map((s) => (
         <StatBar key={s.name} name={s.name} value={s.value} />
       ))}
@@ -44,40 +47,49 @@ export function StatBarList({ stats }: { stats: Stat[] }) {
 }
 
 function StatBar({ name, value }: { name: string; value: number }) {
+  const { theme } = useTheme();
   const rank = getStatRank(value);
   const color = STAT_COLORS[rank];
   const pct = Math.min(value / MAX_BAR, 1);
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        row: { flexDirection: "row", alignItems: "center", gap: 8 },
+        label: { color: theme.textSecondary, fontSize: 11, width: 58 },
+        track: {
+          flex: 1,
+          height: 10,
+          backgroundColor: theme.statTrack,
+          borderRadius: 4,
+          borderWidth: 1,
+          borderColor: theme.border,
+          overflow: "hidden",
+        },
+        fill: { height: "100%", borderRadius: 3 },
+        value: {
+          fontSize: 11,
+          width: 28,
+          textAlign: "right",
+          fontWeight: "600",
+          fontVariant: ["tabular-nums"],
+        },
+      }),
+    [theme]
+  );
 
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{STAT_LABELS[name] ?? name}</Text>
       <View style={styles.track}>
-        <View style={[styles.fill, { width: `${pct * 100}%`, backgroundColor: color }]} />
+        <View
+          style={[
+            styles.fill,
+            { width: `${pct * 100}%`, backgroundColor: color },
+          ]}
+        />
       </View>
       <Text style={[styles.value, { color }]}>{value}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  list: { gap: 6, width: "100%", marginTop: 8 },
-  row: { flexDirection: "row", alignItems: "center", gap: 8 },
-  label: { color: "#cecbc5", fontSize: 11, width: 58 },
-  track: {
-    flex: 1,
-    height: 10,
-    backgroundColor: "#a3a3a3",
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.15)",
-    overflow: "hidden",
-  },
-  fill: { height: "100%", borderRadius: 3 },
-  value: {
-    fontSize: 11,
-    width: 28,
-    textAlign: "right",
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
-  },
-});

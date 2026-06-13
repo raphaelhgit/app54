@@ -1,7 +1,7 @@
 import Constants from "expo-constants";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -12,15 +12,50 @@ import {
 
 import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { StatBarList } from "@/src/components/StatBar";
+import { useTheme } from "@/src/hooks/useTheme";
 
 const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
 const API = `http://${host}:3000`;
 
 export default function PokemonDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { theme } = useTheme();
   const [pokemon, setPokemon] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const pokemonId = Number(id);
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.background },
+        content: { padding: 16, alignItems: "center" },
+        center: {
+          flex: 1,
+          backgroundColor: theme.background,
+          justifyContent: "center",
+          alignItems: "center",
+        },
+        image: { width: 120, height: 120 },
+        name: { color: theme.text, fontSize: 24, marginTop: 8 },
+        info: {
+          color: theme.textSecondary,
+          fontSize: 14,
+          marginTop: 6,
+          textAlign: "center",
+        },
+        sectionTitle: {
+          color: theme.text,
+          fontSize: 16,
+          fontWeight: "600",
+          marginTop: 20,
+          marginBottom: 4,
+          alignSelf: "flex-start",
+          width: "100%",
+        },
+        error: { color: theme.textSecondary, fontSize: 16 },
+      }),
+    [theme]
+  );
 
   useEffect(() => {
     (async () => {
@@ -35,7 +70,7 @@ export default function PokemonDetail() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#ffd33d" />
+        <ActivityIndicator color={theme.accent} />
       </View>
     );
   }
@@ -87,27 +122,3 @@ export default function PokemonDetail() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#25292e" },
-  content: { padding: 16, alignItems: "center" },
-  center: {
-    flex: 1,
-    backgroundColor: "#25292e",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  image: { width: 120, height: 120 },
-  name: { color: "#efeee8", fontSize: 24, marginTop: 8 },
-  info: { color: "#cecbc5", fontSize: 14, marginTop: 6, textAlign: "center" },
-  sectionTitle: {
-    color: "#efeee8",
-    fontSize: 16,
-    fontWeight: "600",
-    marginTop: 20,
-    marginBottom: 4,
-    alignSelf: "flex-start",
-    width: "100%",
-  },
-  error: { color: "#cecbc5", fontSize: 16 },
-});

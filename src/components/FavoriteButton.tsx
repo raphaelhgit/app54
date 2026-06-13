@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { Animated, Pressable } from "react-native";
 
 import { useFavorites } from "@/src/contexts/FavoritesContext";
+import { useTheme } from "@/src/hooks/useTheme";
 
 type Props = {
   id: number;
@@ -11,6 +12,7 @@ type Props = {
 
 export function FavoriteButton({ id, size = 28 }: Props) {
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { theme } = useTheme();
   const favorite = isFavorite(id);
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -42,7 +44,7 @@ export function FavoriteButton({ id, size = 28 }: Props) {
         <Ionicons
           name={favorite ? "star" : "star-outline"}
           size={size}
-          color={favorite ? "#ffd33d" : "#cecbc5"}
+          color={favorite ? theme.accent : theme.textSecondary}
         />
       </Animated.View>
     </Pressable>
